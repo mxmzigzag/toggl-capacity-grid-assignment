@@ -1,6 +1,10 @@
 :root {
   color-scheme: light dark;
   font-family: ui-sans-serif, system-ui, sans-serif;
+
+  --ok: #2e7d32;
+  --high: #b26a00;
+  --over: #c62828;
 }
 
 body {
@@ -10,23 +14,179 @@ body {
 
 h1 {
   font-size: 1.4rem;
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.75rem;
 }
 
-.range {
-  margin: 0 0 1.5rem;
-  opacity: 0.6;
+/* Controls ----------------------------------------------------------------- */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+}
+
+.controls .nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.controls label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  opacity: 0.8;
+  gap: 0.25rem;
+}
+
+.controls button,
+.controls input {
+  font: inherit;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  background: transparent;
+  color: inherit;
+}
+
+.controls button {
+  cursor: pointer;
+}
+
+/* Messages ----------------------------------------------------------------- */
+
+.message {
+  opacity: 0.8;
   font-variant-numeric: tabular-nums;
 }
 
-table {
-  border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
+.message.error {
+  color: var(--over);
+  opacity: 1;
 }
 
-th,
-td {
-  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
-  padding: 0.5rem 0.75rem;
+/* Grid --------------------------------------------------------------------- */
+
+.grid-wrap {
+  overflow: auto;
+  max-height: 80vh;
+  border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  border-radius: 8px;
+  transition: opacity 120ms ease;
+}
+
+.grid-wrap[data-stale] {
+  opacity: 0.6; /* dim while a newer range loads */
+}
+
+table.grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+}
+
+.grid th,
+.grid td {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding: 0.4rem 0.6rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: Canvas;
+  text-align: right;
+}
+
+.grid .col-person {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: Canvas;
   text-align: left;
+  font-weight: 600;
+}
+
+.grid thead .col-person,
+.grid thead .col-capacity {
+  z-index: 3;
+}
+
+.grid .col-capacity {
+  position: sticky;
+  left: 9rem; /* sits just right of the name column */
+  z-index: 1;
+  background: Canvas;
+  text-align: left;
+}
+
+/* Cell load levels --------------------------------------------------------- */
+
+.cell .cap {
+  opacity: 0.45;
+  font-size: 0.85em;
+}
+
+.cell.load-none {
+  opacity: 0.55;
+}
+
+.cell.load-ok {
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+}
+
+.cell.load-high {
+  background: color-mix(in srgb, var(--high) 20%, transparent);
+}
+
+.cell.load-over {
+  background: color-mix(in srgb, var(--over) 24%, transparent);
+  font-weight: 700;
+  color: var(--over);
+}
+
+.cell.load-over .cap {
+  color: inherit;
+  opacity: 0.6;
+}
+
+/* Capacity editing --------------------------------------------------------- */
+
+.capacity-edit {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: inherit;
+}
+
+.capacity-edit:hover {
+  border-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.col-capacity input {
+  font: inherit;
+  width: 5rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  background: Canvas;
+  color: inherit;
+}
+
+.cell-error {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--over);
+  white-space: normal;
+  max-width: 10rem;
 }
