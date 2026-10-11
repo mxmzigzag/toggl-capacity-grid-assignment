@@ -6,10 +6,11 @@ import (
 	"time"
 )
 
-// workdayHours is the length of one standard working day. assignments.hours_per_day
-// is a fraction of such a day (1.0 = fully booked), so a person's allocated hours for
-// a day is hours_per_day * workdayHours. See DECISIONS.md / .notes/worklog.md.
-const workdayHours = 8.0
+// assignments.hours_per_day is literal hours a person is booked on an assignment that
+// day (verified against the seed: daily sums per person cap at 8.0, a full workday).
+// So a person's allocated hours for a week is just the sum of hours_per_day over the
+// weekdays in that week. Capacity is the person's weekly_hours; part-timers tip into
+// over-allocation when booked like full-timers. See .notes/worklog.md.
 
 // maxRangeDays guards against unbounded scans. The seed spans ~2 years, so anything
 // wider than that is almost certainly a mistake, not a real request.
@@ -109,18 +110,21 @@ func (s *server) handleCapacity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := capacityResponse{Weeks: weeks, People: people}
+	for i := range resp.People {
+		resp.People[i].Cells = make([]cell, len(weeks)) // zero-filled; populated below
+	}
 
-	// Allocated hours per person per week: sum of daily fractions on weekdays (Mon–Fri),
-	// scaled to a standard workday. Scoped to the requested week span.
+	// Allocated hours per person per week: sum of booked hours on weekdays (Mon–Fri).
+	// Scoped to the requested week span.
 	rows, err := s.db.Query(ctx, `
 		SELECT a.person_id,
 		       (date_trunc('week', d.day))::date AS week_start,
-		       (sum(a.hours_per_day) * $3)::float8 AS allocated_hours
+		       sum(a.hours_per_day)::float8 AS allocated_hours
 		FROM generate_series($1::date, $2::date, interval '1 day') AS d(day)
 		JOIN assignments a ON d.day BETWEEN a.start_date AND a.end_date
 		WHERE extract(isodow FROM d.day) < 6
 		GROUP BY a.person_id, week_start`,
-		queryStart.Format(dateLayout), queryEnd.Format(dateLayout), workdayHours)
+		queryStart.Format(dateLayout), queryEnd.Format(dateLayout))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
